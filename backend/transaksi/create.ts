@@ -1,4 +1,4 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
 import db from "../db";
 
 interface TransaksiDetailInput {
@@ -27,6 +27,20 @@ interface Transaksi {
 export const create = api<CreateTransaksiRequest, Transaksi>(
   { expose: true, method: "POST", path: "/transaksi" },
   async (req) => {
+    if (req.details.length === 0) {
+      throw APIError.invalidArgument("Transaction must have at least one detail item");
+    }
+
+    for (const detail of req.details) {
+      if (detail.jumlah <= 0) {
+        throw APIError.invalidArgument(`Quantity must be greater than zero for batch ${detail.id_batch}`);
+      }
+
+      if (detail.harga < 0) {
+        throw APIError.invalidArgument(`Price cannot be negative for batch ${detail.id_batch}`);
+      }
+    }
+
     await using tx = await db.begin();
 
     const nomorTransaksi = `TRX-${Date.now()}`;

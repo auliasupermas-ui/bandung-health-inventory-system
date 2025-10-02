@@ -1,4 +1,4 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
 import db from "../db";
 
 interface CreateBatchRequest {
@@ -24,6 +24,25 @@ interface Batch {
 export const create = api<CreateBatchRequest, Batch>(
   { expose: true, method: "POST", path: "/batch" },
   async (req) => {
+    if (req.stok_tersedia < 0) {
+      throw APIError.invalidArgument("Stock must be zero or positive");
+    }
+
+    if (req.harga_perolehan < 0) {
+      throw APIError.invalidArgument("Price must be zero or positive");
+    }
+
+    if (req.tanggal_kadaluarsa) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expiryDate = new Date(req.tanggal_kadaluarsa);
+      expiryDate.setHours(0, 0, 0, 0);
+
+      if (expiryDate <= today) {
+        throw APIError.invalidArgument("Expiry date must be in the future");
+      }
+    }
+
     const row = await db.queryRow<Batch>`
       INSERT INTO batch (
         id_barang, nomor_batch, harga_perolehan, 

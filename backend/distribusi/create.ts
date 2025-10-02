@@ -1,4 +1,4 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
 import db from "../db";
 
 interface DistribusiDetailInput {
@@ -25,6 +25,20 @@ interface Distribusi {
 export const create = api<CreateDistribusiRequest, Distribusi>(
   { expose: true, method: "POST", path: "/distribusi" },
   async (req) => {
+    if (req.details.length === 0) {
+      throw APIError.invalidArgument("Distribution must have at least one detail item");
+    }
+
+    for (const detail of req.details) {
+      if (detail.jumlah <= 0) {
+        throw APIError.invalidArgument(`Quantity must be greater than zero for batch ${detail.id_batch}`);
+      }
+
+      if (!detail.tujuan || detail.tujuan.trim() === "") {
+        throw APIError.invalidArgument(`Destination is required for batch ${detail.id_batch}`);
+      }
+    }
+
     await using tx = await db.begin();
 
     const nomorDistribusi = `DIST-${Date.now()}`;

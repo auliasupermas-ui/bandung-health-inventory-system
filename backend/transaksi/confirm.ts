@@ -54,14 +54,25 @@ export const confirm = api<ConfirmTransaksiRequest, Transaksi>(
           WHERE id = ${detail.id_batch}
         `;
       } else if (transaksi.jenis_transaksi === "pengeluaran" || transaksi.jenis_transaksi === "retur") {
-        const batch = await tx.queryRow<{ stok_tersedia: number }>`
-          SELECT stok_tersedia
+        const batch = await tx.queryRow<{ 
+          stok_tersedia: number;
+          nomor_batch: string | null;
+        }>`
+          SELECT stok_tersedia, nomor_batch
           FROM batch
           WHERE id = ${detail.id_batch}
+          FOR UPDATE
         `;
 
-        if (!batch || batch.stok_tersedia < detail.jumlah) {
-          throw APIError.failedPrecondition(`insufficient stock for batch ${detail.id_batch}`);
+        if (!batch) {
+          throw APIError.notFound(`Batch ${detail.id_batch} not found`);
+        }
+
+        if (batch.stok_tersedia < detail.jumlah) {
+          const batchName = batch.nomor_batch || `ID ${detail.id_batch}`;
+          throw APIError.failedPrecondition(
+            `Insufficient stock for batch ${batchName}. Available: ${batch.stok_tersedia}, Required: ${detail.jumlah}`
+          );
         }
 
         await tx.exec`
