@@ -13,6 +13,8 @@ interface Transaksi {
   nomor_transaksi: string;
   jenis_transaksi: string;
   tanggal_transaksi: Date;
+  id_sarana: number | null;
+  nama_sarana: string | null;
   keterangan: string | null;
   status: string;
   created_by: string | null;
@@ -30,9 +32,11 @@ export const list = api<ListTransaksiRequest, ListTransaksiResponse>(
   async (req) => {
     let query = `
       SELECT 
-        id, nomor_transaksi, jenis_transaksi, tanggal_transaksi,
-        keterangan, status, created_by, created_at, confirmed_at
-      FROM transaksi
+        t.id, t.nomor_transaksi, t.jenis_transaksi, t.tanggal_transaksi,
+        t.id_sarana, s.nama_sarana, t.keterangan, t.status, t.created_by, 
+        t.created_at, t.confirmed_at
+      FROM transaksi t
+      LEFT JOIN sarana s ON s.id = t.id_sarana
       WHERE 1=1
     `;
     const params: any[] = [];

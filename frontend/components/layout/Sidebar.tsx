@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { Package, Layers, ArrowLeftRight, Send, FileText } from "lucide-react";
+import { Package, Layers, ArrowLeftRight, Send, FileText, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Master Barang", href: "/barang", icon: Package },
+  { name: "Master Sarana", href: "/sarana", icon: Building2 },
   { name: "Batch", href: "/batch", icon: Layers },
   { name: "Transaksi", href: "/transaksi", icon: ArrowLeftRight },
   { name: "Distribusi", href: "/distribusi", icon: Send },

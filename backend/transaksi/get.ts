@@ -20,6 +20,8 @@ interface Transaksi {
   nomor_transaksi: string;
   jenis_transaksi: string;
   tanggal_transaksi: Date;
+  id_sarana: number | null;
+  nama_sarana: string | null;
   keterangan: string | null;
   status: string;
   created_by: string | null;
@@ -37,6 +39,8 @@ export const get = api<GetTransaksiRequest, Transaksi>(
       nomor_transaksi: string;
       jenis_transaksi: string;
       tanggal_transaksi: Date;
+      id_sarana: number | null;
+      nama_sarana: string | null;
       keterangan: string | null;
       status: string;
       created_by: string | null;
@@ -44,10 +48,12 @@ export const get = api<GetTransaksiRequest, Transaksi>(
       confirmed_at: Date | null;
     }>`
       SELECT 
-        id, nomor_transaksi, jenis_transaksi, tanggal_transaksi,
-        keterangan, status, created_by, created_at, confirmed_at
-      FROM transaksi
-      WHERE id = ${req.id}
+        t.id, t.nomor_transaksi, t.jenis_transaksi, t.tanggal_transaksi,
+        t.id_sarana, s.nama_sarana, t.keterangan, t.status, t.created_by, 
+        t.created_at, t.confirmed_at
+      FROM transaksi t
+      LEFT JOIN sarana s ON s.id = t.id_sarana
+      WHERE t.id = ${req.id}
     `;
 
     if (!header) {

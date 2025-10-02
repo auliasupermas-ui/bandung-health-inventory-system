@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import backend from "~backend/client";
@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import SearchBarang from "@/components/barang/SearchBarang";
 import type { BatchInfo } from "~backend/barang/search";
+import type { Sarana } from "~backend/sarana/list";
 
 interface DetailItem {
   id_batch: number;
@@ -36,8 +37,14 @@ export default function TransaksiFormPage() {
   const [tanggal, setTanggal] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+  const [idSarana, setIdSarana] = useState<string>("");
   const [keterangan, setKeterangan] = useState("");
   const [details, setDetails] = useState<DetailItem[]>([]);
+  const [saranaList, setSaranaList] = useState<Sarana[]>([]);
+
+  useEffect(() => {
+    backend.sarana.list().then(data => setSaranaList(data.items)).catch(console.error);
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: (data: any) => backend.transaksi.create(data),
@@ -112,6 +119,7 @@ export default function TransaksiFormPage() {
     createMutation.mutate({
       jenis_transaksi: jenis,
       tanggal_transaksi: new Date(tanggal),
+      id_sarana: idSarana ? parseInt(idSarana) : undefined,
       keterangan,
       details: details.map((d) => ({
         id_batch: d.id_batch,
@@ -139,7 +147,7 @@ export default function TransaksiFormPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="rounded-lg border bg-card p-6">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="jenis">Jenis Transaksi</Label>
               <Select value={jenis} onValueChange={setJenis}>
@@ -162,6 +170,26 @@ export default function TransaksiFormPage() {
                 onChange={(e) => setTanggal(e.target.value)}
                 required
               />
+            </div>
+            <div>
+              <Label htmlFor="sarana">
+                {jenis === "penerimaan" || jenis === "retur"
+                  ? "Asal Penerimaan"
+                  : "Tujuan Distribusi"}
+              </Label>
+              <Select value={idSarana} onValueChange={setIdSarana}>
+                <SelectTrigger id="sarana">
+                  <SelectValue placeholder="Pilih sarana" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tidak ada</SelectItem>
+                  {saranaList.map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.nama_sarana}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="keterangan">Keterangan</Label>

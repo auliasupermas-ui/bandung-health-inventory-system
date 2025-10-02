@@ -88,6 +88,7 @@ export default function TransaksiPage() {
               <TableHead>Nomor</TableHead>
               <TableHead>Jenis</TableHead>
               <TableHead>Tanggal</TableHead>
+              <TableHead>Sarana</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Keterangan</TableHead>
               <TableHead className="w-[150px]">Aksi</TableHead>
@@ -96,13 +97,13 @@ export default function TransaksiPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : data?.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   Tidak ada data
                 </TableCell>
               </TableRow>
@@ -120,6 +121,7 @@ export default function TransaksiPage() {
                       locale: id,
                     })}
                   </TableCell>
+                  <TableCell>{item.nama_sarana || "-"}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -193,6 +195,14 @@ export default function TransaksiPage() {
                   )}
                 </div>
                 <div>
+                  <span className="font-medium">
+                    {detailData.jenis_transaksi === "penerimaan" || detailData.jenis_transaksi === "retur"
+                      ? "Asal Penerimaan:"
+                      : "Tujuan Distribusi:"}
+                  </span>{" "}
+                  {detailData.nama_sarana || "-"}
+                </div>
+                <div>
                   <span className="font-medium">Status:</span>{" "}
                   <Badge
                     variant={
@@ -204,6 +214,12 @@ export default function TransaksiPage() {
                     {detailData.status}
                   </Badge>
                 </div>
+                {detailData.keterangan && (
+                  <div className="col-span-2">
+                    <span className="font-medium">Keterangan:</span>{" "}
+                    {detailData.keterangan}
+                  </div>
+                )}
               </div>
               <div className="rounded-lg border">
                 <Table>

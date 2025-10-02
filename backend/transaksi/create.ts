@@ -10,6 +10,7 @@ interface TransaksiDetailInput {
 interface CreateTransaksiRequest {
   jenis_transaksi: string;
   tanggal_transaksi: Date;
+  id_sarana?: number;
   keterangan?: string;
   created_by?: string;
   details: TransaksiDetailInput[];
@@ -48,12 +49,13 @@ export const create = api<CreateTransaksiRequest, Transaksi>(
     const transaksi = await tx.queryRow<Transaksi>`
       INSERT INTO transaksi (
         nomor_transaksi, jenis_transaksi, tanggal_transaksi,
-        keterangan, created_by, status
+        id_sarana, keterangan, created_by, status
       )
       VALUES (
         ${nomorTransaksi},
         ${req.jenis_transaksi},
         ${req.tanggal_transaksi},
+        ${req.id_sarana ?? null},
         ${req.keterangan ?? null},
         ${req.created_by ?? null},
         'draft'

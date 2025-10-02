@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import Layout from "@/components/layout/Layout";
 import BarangPage from "@/pages/BarangPage";
+import SaranaPage from "@/pages/SaranaPage";
 import BatchPage from "@/pages/BatchPage";
 import TransaksiPage from "@/pages/TransaksiPage";
 import TransaksiFormPage from "@/pages/TransaksiFormPage";
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/barang" replace />} />
             <Route path="barang" element={<BarangPage />} />
+            <Route path="sarana" element={<SaranaPage />} />
             <Route path="batch" element={<BatchPage />} />
             <Route path="transaksi" element={<TransaksiPage />} />
             <Route path="transaksi/new" element={<TransaksiFormPage />} />
