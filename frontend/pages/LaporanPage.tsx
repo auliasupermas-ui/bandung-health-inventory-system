@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import backend from "~backend/client";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,27 @@ export default function LaporanPage() {
     new Date().toISOString().split("T")[0]
   );
   const [hariKadaluarsa, setHariKadaluarsa] = useState<string>("150");
+
+  // Untuk kartu stok
+  const [selectedBarangId, setSelectedBarangId] = useState<string>("");
+  const [barangList, setBarangList] = useState<
+    { id: number; nama_barang: string; kode_barang: string }[]
+  >([]);
+
+  useEffect(() => {
+    backend.barang.list().then((data) => {
+      setBarangList(data.items || []);
+    });
+  }, []);
+
+  const { data: kartuStok, isLoading: loadingKartuStok } = useQuery({
+    queryKey: ["laporan", "kartu-stok", selectedBarangId],
+    queryFn: () =>
+      backend.laporan.kartuStok({
+        id_barang: parseInt(selectedBarangId),
+      }),
+    enabled: !!selectedBarangId,
+  });
 
   const { data: stokPerBatch, isLoading: loadingStokPerBatch } = useQuery({
     queryKey: ["laporan", "stok-per-batch"],
@@ -56,7 +77,7 @@ export default function LaporanPage() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Laporan</h2>
         <p className="text-sm text-muted-foreground">
-          Laporan stok, buku barang, dan kadaluarsa
+          Laporan stok, buku barang, kadaluarsa, dan kartu stok
         </p>
       </div>
 
@@ -66,6 +87,7 @@ export default function LaporanPage() {
           <TabsTrigger value="stok-konsolidasi">Stok Konsolidasi</TabsTrigger>
           <TabsTrigger value="buku-barang">Buku Barang</TabsTrigger>
           <TabsTrigger value="kadaluarsa">Kadaluarsa</TabsTrigger>
+          <TabsTrigger value="kartu-stok">Kartu Stok</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stok-batch" className="space-y-4">
@@ -114,8 +136,7 @@ export default function LaporanPage() {
                           : "-"}
                       </TableCell>
                       <TableCell className="text-right">
-                        {item.stok_tersedia.toLocaleString("id-ID")}{" "}
-                        {item.satuan}
+                        {item.stok_tersedia.toLocaleString("id-ID")} {item.satuan}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         Rp {item.nilai_persediaan.toLocaleString("id-ID")}
@@ -295,12 +316,78 @@ export default function LaporanPage() {
                           {item.hari_tersisa} hari
                         </TableCell>
                         <TableCell className="text-right">
-                          {item.stok_tersedia.toLocaleString("id-ID")}{" "}
-                          {item.satuan}
+                          {item.stok_tersedia.toLocaleString("id-ID")} {item.satuan}
                         </TableCell>
                       </TableRow>
                     ))
                   )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* TAB BARU: Kartu Stok */}
+        <TabsContent value="kartu-stok" className="space-y-4">
+          <div className="flex items-end gap-4">
+            <div>
+              <Label htmlFor="barang">Pilih Barang</Label>
+              <select
+                id="barang"
+                className="border rounded px-2 py-1"
+                value={selectedBarangId}
+                onChange={(e) => setSelectedBarangId(e.target.value)}
+              >
+                <option value="">Pilih barang</option>
+                {barangList.map((barang) => (
+                  <option key={barang.id} value={barang.id.toString()}>
+                    {barang.nama_barang} ({barang.kode_barang})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {loadingKartuStok ? (
+            <div>Loading...</div>
+          ) : !selectedBarangId ? (
+            <div className="py-8 text-muted-foreground text-center">
+              Pilih barang terlebih dahulu
+            </div>
+          ) : kartuStok?.items?.length === 0 ? (
+            <div className="py-8 text-muted-foreground text-center">
+              Tidak ada transaksi untuk barang ini
+            </div>
+          ) : (
+            <div className="rounded-lg border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Nomor Transaksi</TableHead>
+                    <TableHead>Jenis</TableHead>
+                    <TableHead>Jumlah</TableHead>
+                    <TableHead>Sisa Stok</TableHead>
+                    <TableHead>Keterangan</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {kartuStok.items.map((trx) => (
+                    <TableRow key={trx.id}>
+                      <TableCell>
+                        {format(new Date(trx.tanggal), "dd MMM yyyy", {
+                          locale: id,
+                        })}
+                      </TableCell>
+                      <TableCell>{trx.nomor_transaksi}</TableCell>
+                      <TableCell className="capitalize">{trx.jenis}</TableCell>
+                      <TableCell className="text-right">{trx.jumlah}</TableCell>
+                      <TableCell className="text-right">
+                        {trx.sisa_stok}
+                      </TableCell>
+                      <TableCell>{trx.keterangan || "-"}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
